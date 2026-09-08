@@ -172,6 +172,12 @@ if(${SDL2_FOUND})
 			RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/macosx/Srb2mac.icns"
 		)
 	endif()
+	if(ANDROID)
+    add_link_options(
+        "-Wl,-z,max-page-size=16384"
+    	"-Wl,-z,common-page-size=16384"
+    )
+	endif()
 	target_link_libraries(SRB2SDL2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/SDL2/libs/arm64-v8a/libSDL2.so")
 	target_link_libraries(SRB2SDL2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/libs/arm64-v8a/libSDL2_mixer.so" "${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/libs/arm64-v8a/libmpg123.so")
 	target_link_libraries(SRB2SDL2 PRIVATE

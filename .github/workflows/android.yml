@@ -23,5 +23,5 @@ jobs:
       run: cd android && ./gradlew build
     - uses: actions/upload-artifact@v4
       with:
-        name: srb2
+        name: srb2kart
         path: android/app/build/outputs/apk/

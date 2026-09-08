@@ -13,7 +13,7 @@ android {
         targetSdkVersion 30
         versionCode 160
         versionName "1.6"
-        ndkVersion "26.1.10909125"
+        ndkVersion "29.0.14206865"
         externalNativeBuild {
             cmake {
                 abiFilters 'arm64-v8a'
