@@ -13,7 +13,9 @@ if(${SRB2_CONFIG_SDL2_USEMIXER})
 			set(SDL2_MIXER_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/SDL2_mixer/i686-w64-mingw32/lib -lSDL2_mixer")
 		endif()
 	else()
-		find_package(SDL2_mixer)
+		set(SDL2_MIXER_FOUND ON)
+		set(SDL2_MIXER_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/include/)
+		set(SDL2_MIXER_LIBRARIES "-L${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/libs/arm64-v8a/ -lSDL2_mixer")
 	endif()
 	if(${SDL2_MIXER_FOUND})
 		set(SRB2_HAVE_MIXER ON)
@@ -31,6 +33,7 @@ set(SRB2_SDL2_SOURCES
 	endtxt.c
 	hwsym_sdl.c
 	i_main.c
+	SDL_main/SDL_android_main.c
 	i_net.c
 	i_system.cpp
 	i_ttf.c
@@ -63,7 +66,9 @@ if(${SRB2_CONFIG_USE_INTERNAL_LIBRARIES})
 		set(SDL2_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/SDL2/i686-w64-mingw32/lib -lSDL2")
 	endif()
 else()
-	find_package(SDL2)
+	set(SDL2_FOUND ON)
+	set(SDL2_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/thirdparty/SDL2/include)
+	set(SDL2_LIBRARIES "-L${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/libs/arm64-v8a/ -lSDL2")
 endif()
 
 if(${SDL2_FOUND})
@@ -80,6 +85,8 @@ if(${SDL2_FOUND})
 		${SRB2_LUA_HEADERS}
 		${SRB2_BLUA_SOURCES}
 		${SRB2_BLUA_HEADERS}
+		${SRB2_ANDROID_SOURCES}
+		${SRB2_ANDROID_HEADERS}
 		${SRB2_SDL2_SOURCES}
 		${SRB2_SDL2_HEADERS}
 	)
@@ -88,6 +95,7 @@ if(${SDL2_FOUND})
 		${SRB2_PNG_SOURCES} ${SRB2_PNG_HEADERS})
 	source_group("Renderer" FILES ${SRB2_CORE_RENDER_SOURCES})
 	source_group("Game" FILES ${SRB2_CORE_GAME_SOURCES})
+	source_group("Android" FILES ${SRB2_ANDROID_SOURCES} ${SRB2_ANDROID_HEADERS})
 	source_group("Discord Rich Presence" FILES ${SRB2_DISCORDRPC_SOURCES} ${SRB2_DISCORDRPC_HEADERS})
 	source_group("Assembly" FILES ${SRB2_ASM_SOURCES} ${SRB2_NASM_SOURCES})
 	source_group("LUA" FILES ${SRB2_LUA_SOURCES} ${SRB2_LUA_HEADERS})
@@ -131,7 +139,7 @@ if(${SDL2_FOUND})
 		set(SRB2_SDL2_TOTAL_SOURCES ${SRB2_SDL2_TOTAL_SOURCES} ${SRB2_SDL2_MAC_SOURCES})
 	endif()
 
-	add_executable(SRB2SDL2 MACOSX_BUNDLE WIN32 ${SRB2_SDL2_TOTAL_SOURCES})
+	add_library(SRB2SDL2 SHARED ${SRB2_SDL2_TOTAL_SOURCES})
 	set_target_properties(SRB2SDL2 PROPERTIES OUTPUT_NAME ${SRB2_SDL2_EXE_NAME})
 
 	if(${CMAKE_SYSTEM} MATCHES Darwin)
@@ -151,19 +159,18 @@ if(${SDL2_FOUND})
 			RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/macosx/Srb2mac.icns"
 		)
 	endif()
-
+	target_link_libraries(SRB2SDL2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/SDL2/libs/arm64-v8a/libSDL2.so")
+	target_link_libraries(SRB2SDL2 PRIVATE "${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/libs/arm64-v8a/libSDL2_mixer.so" "${CMAKE_SOURCE_DIR}/thirdparty/SDL2_mixer/libs/arm64-v8a/libmpg123.so")
 	target_link_libraries(SRB2SDL2 PRIVATE
-		${SDL2_LIBRARIES}
-		${SDL2_MIXER_LIBRARIES}
 		${GME_LIBRARIES}
 		${OPENMPT_LIBRARIES}
-		${MIXERX_LIBRARIES}
 		${PNG_LIBRARIES}
-		${ZLIB_LIBRARIES}
+		"-lz"
 		${OPENGL_LIBRARIES}
-		${CURL_LIBRARIES}
 		${DISCORDRPC_LIBRARIES}
 	)
+	target_link_libraries(SRB2SDL2 PRIVATE CURL::curl)
+	target_link_libraries(SRB2SDL2 PRIVATE libpng::libpng)
 
 	if(${SRB2_HAVE_LIBBACKTRACE})
 		target_link_libraries(SRB2SDL2 PRIVATE ${LIBBACKTRACE_LIBRARIES})

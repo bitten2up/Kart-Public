@@ -649,7 +649,6 @@ static void ArchiveSectors(savebuffer_t *save)
 		{
 			WRITEUINT16(save->p, i);
 			WRITEUINT8(save->p, diff);
-
 			if (diff & SD_DIFF2)
 				WRITEUINT8(save->p, diff2);
 			if (diff & SD_FLOORHT)

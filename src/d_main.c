@@ -1595,6 +1595,52 @@ static void D_CheckSaturnExtraFiles(void)
 }
 
 #include <locale.h>
+#if defined(__ANDROID__)
+static void FindUsableStorageLocation(char *dest, size_t destsize, char *path, const char **homelist, char *defpath)
+{
+    for (INT32 i = 0; homelist[i]; i++)
+    {
+        snprintf(dest, destsize, "%s" PATHSEP "%s", homelist[i], path);
+        if (FIL_ReadFileOK(dest))
+            return;
+    }
+
+    snprintf(dest, destsize, "%s" PATHSEP "%s", defpath, path);
+}
+
+static void D_AndroidSetupHome(const char *userhome)
+{
+    const char *homelist[3] = { NULL, NULL, NULL };
+    INT32 next = 0;
+
+    strlcpy(srb2home, userhome, sizeof(srb2home));
+
+#define ListAdd(path) \
+	homelist[next] = path; \
+	if (homelist[next]) \
+		next++;
+
+    ListAdd(srb2home);
+    ListAdd(I_AppStorageLocation());
+
+#define SetupLocation(loc, path) FindUsableStorageLocation(loc, sizeof(loc), path, homelist, srb2home)
+
+    SetupLocation(downloaddir, "DOWNLOAD");
+
+    if (dedicated)
+        SetupLocation(configfile, "d" CONFIGFILENAME);
+    else
+        SetupLocation(configfile, CONFIGFILENAME);
+
+#ifdef TOUCHINPUTS
+    SetupLocation(touchlayoutfolder, "touchlayouts");
+#endif
+
+
+#undef SetupLocation
+#undef ListAdd
+}
+#endif
 
 //
 // D_SRB2Main
@@ -1667,6 +1713,9 @@ void D_SRB2Main(void)
 
 	{
 		const char *userhome = D_Home(); //Alam: path to home
+#if defined(__ANDROID__)
+        strlcpy(srb2path, I_AppStorageLocation(), sizeof(srb2path));
+#endif
 		FILE *tmpfile;
 		char testfile[MAX_WADPATH];
 
@@ -1683,6 +1732,8 @@ void D_SRB2Main(void)
 		}
 		else
 		{
+#if defined(__ANDROID__)
+            D_AndroidSetupHome(userhome);
 			// use user specific config file
 			if (M_CheckParm("-workdir") && M_IsNextParm())
 				snprintf(srb2home, sizeof srb2home, "%s", M_GetNextParm());
@@ -1715,7 +1766,7 @@ void D_SRB2Main(void)
 #if defined (_WIN32)
 			I_Error("Couldn't write game config.\nMake sure the game is installed somewhere it has write permissions.\n\n(Don't use the Downloads folder, Program Files, or your desktop!\nIf unsure, we recommend making a subfolder in your Documents folder.)");
 #else
-			I_Error("Couldn't write game config.\nMake sure you've installed the game somewhere it has write permissions.");
+			I_Error("Couldn't write game config.\nMake sure you've installed the game somewhere it has write permissions.\n %s", srb2home);
 #endif
 		}
 		else
@@ -2175,8 +2226,9 @@ const char *D_Home(void)
 {
 	const char *userhome = NULL;
 
-#ifdef ANDROID
-	return "/data/data/org.srb2/";
+#if defined(ANDROID)
+    userhome = I_AppStorageLocation();
+    return userhome;
 #endif
 
 	if (M_CheckParm("-home") && M_IsNextParm())

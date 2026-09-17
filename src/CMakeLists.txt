@@ -224,7 +224,7 @@ set(SRB2_CONFIG_HAVE_PNG ON CACHE BOOL
 	"Enable PNG support. Depends on zlib, so will be disabled if you don't enable that too.")
 set(SRB2_CONFIG_HAVE_ZLIB ON CACHE BOOL
 	"Enable zlib support.")
-set(SRB2_CONFIG_HAVE_GME ON CACHE BOOL
+set(SRB2_CONFIG_HAVE_GME OFF CACHE BOOL
 	"Enable GME support.")
 set(SRB2_CONFIG_HAVE_OPENMPT ON CACHE BOOL
 	"Enable OpenMPT support.")
@@ -232,7 +232,7 @@ set(SRB2_CONFIG_HAVE_DISCORDRPC OFF CACHE BOOL
 	"Enable Discord rich presence support.")
 set(SRB2_CONFIG_HAVE_CURL ON CACHE BOOL
 	"Enable curl support, used for downloading files via HTTP.")
-set(SRB2_CONFIG_HWRENDER ON CACHE BOOL
+set(SRB2_CONFIG_HWRENDER OFF CACHE BOOL
 	"Enable hardware rendering through OpenGL.")
 set(SRB2_CONFIG_STATIC_OPENGL OFF CACHE BOOL
 	"Use statically linked OpenGL. NOT RECOMMENDED.")
@@ -437,43 +437,19 @@ if(${SRB2_CONFIG_HAVE_OPENMPT})
 endif()
 
 if(${SRB2_CONFIG_HAVE_ZLIB})
-	if(${SRB2_CONFIG_USE_INTERNAL_LIBRARIES})
-		set(ZLIB_FOUND ON)
-		set(ZLIB_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libs/zlib)
-		if(${SRB2_SYSTEM_BITS} EQUAL 64)
-			set(ZLIB_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/zlib/win32 -lz64")
-		else() # 32-bit
-			set(ZLIB_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/zlib/win32 -lz32")
-		endif()
-	else()
-		find_package(ZLIB)
-	endif()
-	if(${ZLIB_FOUND})
-		set(SRB2_HAVE_ZLIB ON)
-		add_definitions(-DHAVE_ZLIB)
-	else()
-		message(WARNING "You have specified that ZLIB is available but it was not found. SRB2Kart may not compile correctly.")
-	endif()
+	set(ZLIB_FOUND ON)
+	add_definitions(-DHAVE_ZLIB)
 endif()
 
 if(${SRB2_CONFIG_HAVE_PNG} AND ${SRB2_CONFIG_HAVE_ZLIB})
 	if (${ZLIB_FOUND})
-		if(${SRB2_CONFIG_USE_INTERNAL_LIBRARIES})
-			set(PNG_FOUND ON)
-			set(PNG_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libs/libpng-src)
-			if(${SRB2_SYSTEM_BITS} EQUAL 64)
-				set(PNG_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/libpng-src/projects -lpng64")
-			else() # 32-bit
-				set(PNG_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/libpng-src/projects -lpng32")
-			endif()
-		else()
-			find_package(PNG)
-		endif()
+		set(PNG_FOUND ON)
 		if(${PNG_FOUND})
 			set(SRB2_HAVE_PNG ON)
 			add_definitions(-DHAVE_PNG)
 			add_definitions(-D_LARGEFILE64_SOURCE)
 			source_group("Main" FILES ${SRB2_CORE_SOURCES} ${SRB2_CORE_HEADERS})
+			set(PNG_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/thirdparty/libpng")
 		else()
 			message(WARNING "You have specified that PNG is available but it was not found. SRB2Kart may not compile correctly.")
 		endif()
@@ -481,23 +457,12 @@ if(${SRB2_CONFIG_HAVE_PNG} AND ${SRB2_CONFIG_HAVE_ZLIB})
 endif()
 
 if(${SRB2_CONFIG_HAVE_CURL})
-	if(${SRB2_CONFIG_USE_INTERNAL_LIBRARIES})
-		set(CURL_FOUND ON)
-		set(CURL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/libs/curl/include)
-		if(${SRB2_SYSTEM_BITS} EQUAL 64)
-			set(CURL_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/curl/lib64 -lcurl")
-		else() # 32-bit
-			set(CURL_LIBRARIES "-L${CMAKE_SOURCE_DIR}/libs/curl/lib32 -lcurl")
-		endif()
-	else()
-		find_package(CURL)
-	endif()
-	if(${CURL_FOUND})
-		set(SRB2_HAVE_CURL ON)
-		add_definitions(-DHAVE_CURL)
-	else()
-		message(WARNING "You have specified that CURL is available but it was not found. SRB2Kart may not compile correctly.")
-	endif()
+	set(CURL_FOUND ON)
+	set(CURL_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/thirdparty/curl/include)
+	set(CURL_LIBRARIES "-L${CMAKE_SOURCE_DIR}/thirdparty/curl/libs/arm64-v8a -lcurl")
+	#target_link_libraries(SRB2 PRIVATE CURL::curl)
+	set(SRB2_HAVE_CURL ON)
+	add_definitions(-DHAVE_CURL)
 endif()
 
 if(${SRB2_CONFIG_LIBBACKTRACE})
@@ -613,6 +578,8 @@ endif()
 add_compile_options(-g)
 
 add_definitions(-DCMAKECONFIG)
+add_definitions(-DNOMUMBLE)
+add_definitions(-DSTDC_HEADERS)
 
 #add_library(SRB2Core STATIC
 #	${SRB2_CORE_SOURCES}
@@ -624,7 +591,20 @@ add_definitions(-DCMAKECONFIG)
 #	${SRB2_BLUA_SOURCES}
 #	${SRB2_BLUA_HEADERS}
 #)
+set(SRB2_ANDROID_SOURCES
+		android-jni/jni_android.c
+		android-jni/ndk_crash_handler.c
+		android-jni/ndk_strings.c
+)
+set(SRB2_ANDROID_HEADERS
+		android-jni/jni_android.h
+		android-jni/ndk_crash_handler.h
+		android-jni/ndk_strings.h
+)
+prepend_sources(SRB2_ANDROID_SOURCES)
+prepend_sources(SRB2_ANDROID_HEADERS)
 
+source_group("Android" FILES ${SRB2_ANDROID_SOURCES} ${SRB2_ANDROID_HEADERS})
 if(${SRB2_CONFIG_DEDICATED})
 	add_subdirectory(dedicated)
 else()

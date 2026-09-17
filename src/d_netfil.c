@@ -71,6 +71,7 @@ static int curlprogress_callbackx(void *clientp, curl_off_t dltotal, curl_off_t 
 #define XFERINFOFUNCTION
 #endif
 #endif
+#endif
 
 // Sender structure
 typedef struct filetx_s
