@@ -1738,6 +1738,7 @@ void D_SRB2Main(void)
 			if (M_CheckParm("-workdir") && M_IsNextParm())
 				snprintf(srb2home, sizeof srb2home, "%s", M_GetNextParm());
 			else
+#endif
 #ifdef DEFAULTDIR
 				snprintf(srb2home, sizeof srb2home, "%s" PATHSEP DEFAULTDIR, userhome);
 #else // DEFAULTDIR

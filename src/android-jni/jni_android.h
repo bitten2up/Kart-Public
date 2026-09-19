@@ -18,7 +18,13 @@ extern "C" {
 #endif
 #include <jni.h>
 
+#ifdef __cplusplus
+}
+#endif
 #include "../doomdata.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include "../doomtype.h"
 #include "../doomdef.h"
 

@@ -2616,7 +2616,7 @@ static const char *locateWad(void)
 #endif
 
 #if defined(__ANDROID__)
-#define SHAREDSTORAGEFOLDER "RingRacers"
+#define SHAREDSTORAGEFOLDER "SRB2 Kart"
 #endif
 #ifdef ANDROID
     return "/storage/emulated/0/SRB2 Kart";

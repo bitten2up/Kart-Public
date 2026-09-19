@@ -101,7 +101,7 @@ static boolean StorageCheckPermission(void)
 
 	return false;
 }
-
+#if 0
 /** Return the number of parts of this path.
 */
 int M_PathParts(const char *path) {
@@ -184,7 +184,7 @@ void M_MkdirEachUntil(const char *cpath, int start, int end, int mode)
         }
     }
 }
-
+#endif
 #ifdef LOGMESSAGES
 void I_InitLogging(void)
 {
